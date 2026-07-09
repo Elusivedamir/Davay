@@ -344,29 +344,42 @@ class TelegramBot:
         
         text = str(text)
         
-        # Словарь секретов для маскирования
-        secrets_to_mask = {}
+        # Список секретов для маскирования (не словарь!) — порядок важен:
+        # более длинные/специфичные секреты (телефон, api_hash) должны
+        # маскироваться раньше короткого числового api_id, иначе api_id
+        # может совпасть с частью телефона или кода подтверждения
+        secrets_to_mask = []
         
         if self.api_hash and self.api_hash.strip():
-            secrets_to_mask[self.api_hash] = "***api_hash***"
-        
-        if self.api_id:
-            secrets_to_mask[str(self.api_id)] = "***api_id***"
+            secrets_to_mask.append((self.api_hash, "***api_hash***"))
         
         if self.phone and self.phone.strip():
-            secrets_to_mask[self.phone] = "***phone***"
+            secrets_to_mask.append((self.phone, "***phone***"))
         
         if self.proxy:
             proxy_pass = self.proxy.get("password", "")
             if proxy_pass and proxy_pass.strip():
-                secrets_to_mask[proxy_pass] = "***proxy_pass***"
+                secrets_to_mask.append((proxy_pass, "***proxy_pass***"))
+        
+        api_id_str = str(self.api_id) if self.api_id else None
+        if api_id_str:
+            secrets_to_mask.append((api_id_str, "***api_id***"))
+        
+        # На случай изменения порядка выше — сортируем по убыванию длины
+        secrets_to_mask.sort(key=lambda item: len(item[0]), reverse=True)
         
         # Применяем маскирование
-        for secret, mask in secrets_to_mask.items():
-            if secret and str(secret).strip():
+        for secret, mask in secrets_to_mask:
+            if not secret or not str(secret).strip():
+                continue
+            if secret == api_id_str:
+                # api_id — это просто число, поэтому маскируем только его
+                # цельное вхождение (не как часть телефона или кода)
+                text = re.sub(rf'(?<!\d){re.escape(secret)}(?!\d)', mask, text)
+            else:
                 text = text.replace(str(secret), mask)
         
-        # Маскируем коды валидации (6 цифр подряд)
+        # Маскируем оставшиеся коды валидации (6 цифр подряд)
         text = re.sub(r'\b\d{6}\b', '***code***', text)
         
         return text
