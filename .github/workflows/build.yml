@@ -86,13 +86,19 @@ jobs:
       
       - name: 📦 Упаковка DMG для ${{ matrix.arch }}
         run: |
+          rm -rf /tmp/dmg_contents
           mkdir -p /tmp/dmg_contents
-          cp -r dist/TelegramAutoBot.app /tmp/dmg_contents/
+          cp -R dist/TelegramAutoBot.app /tmp/dmg_contents/
+          # ✅ Снимаем карантинные/расширенные атрибуты, которые GitHub
+          # проставляет при checkout — из-за них hdiutil иногда падает
+          # с "Operation not permitted"
+          xattr -cr /tmp/dmg_contents/TelegramAutoBot.app
           ln -s /Applications /tmp/dmg_contents/Applications
           hdiutil create -srcfolder /tmp/dmg_contents \
                          -volname "${{ env.APP_NAME }}" \
-                         -fs HFS+ -fsargs "-c c=63" \
+                         -fs APFS \
                          -format UDZO \
+                         -ov \
                          -o ${{ env.APP_NAME }}_${{ matrix.arch }}_$(date +%Y%m%d).dmg
       
       - name: ⬆️ Загрузка артефактов (app)
