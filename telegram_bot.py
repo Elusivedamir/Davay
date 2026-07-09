@@ -12,19 +12,19 @@ from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.functions.messages import ImportChatInviteRequest
 
 import utils
-from fixed_config import settings_manager, secrets_manager, BotSettings
+from config import settings_manager, secrets_manager, BotSettings
 
 logger = utils.setup_logger()
 APP_NAME = "TelegramAutoBot"
 
 
 def app_dir():
-    from fixed_config import get_app_dir
+    from config import get_app_dir
     return get_app_dir()
 
 
 def history_file():
-    from fixed_config import get_history_file
+    from config import get_history_file
     return get_history_file()
 
 
@@ -85,7 +85,7 @@ class TelegramBot:
 
     def _save_stats_to_file(self):
         try:
-            from fixed_config import get_stats_file
+            from config import get_stats_file
             payload = {
                 "timestamp": datetime.now().isoformat(),
                 **self.stats,
@@ -97,7 +97,7 @@ class TelegramBot:
 
     def load_stats_from_file(self):
         try:
-            from fixed_config import get_stats_file
+            from config import get_stats_file
             stats_file = get_stats_file()
             if not os.path.exists(stats_file):
                 return self.stats
@@ -267,7 +267,7 @@ class TelegramBot:
                     self.proxy.get("password", "")
                 )
 
-            from fixed_config import get_session_path
+            from config import get_session_path
             session_path = get_session_path(self.session_name)
 
             self.client = TelegramClient(

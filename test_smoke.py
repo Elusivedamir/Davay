@@ -16,35 +16,43 @@ def test_config_import():
 
 
 def test_config_variables():
-    """Проверка наличия необходимых переменных в config.py"""
+    """Проверка наличия необходимых полей и менеджеров в config.py"""
     try:
         import config
-        
-        required_vars = [
-            'JOIN_DELAY',
-            'COMMENT_DELAY_MIN', 
-            'COMMENT_DELAY_MAX',
-            'DAILY_LIMIT',
-            'SENT_TODAY',
-            'LAST_RESET_DATE',
-            'COMMENT_VARIANTS',
-            'PROXY_TYPE',
-            'PROXY_IP',
-            'PROXY_PORT',
-            'PROXY_USER',
-            'PROXY_PASS'
+
+        required_settings_fields = [
+            'join_delay',
+            'comment_delay_min',
+            'comment_delay_max',
+            'daily_limit',
+            'sent_today',
+            'last_reset_date',
+            'comment_variants',
         ]
-        
-        missing_vars = []
-        for var in required_vars:
-            if not hasattr(config, var):
-                missing_vars.append(var)
-        
-        if missing_vars:
-            print(f"[FAIL] Отсутствуют переменные в config.py: {missing_vars}")
+
+        settings = config.BotSettings()
+        missing_fields = [f for f in required_settings_fields if not hasattr(settings, f)]
+
+        if missing_fields:
+            print(f"[FAIL] Отсутствуют поля в BotSettings: {missing_fields}")
             return False
-        
-        print(f"[OK] Все {len(required_vars)} необходимых переменных есть в config.py")
+
+        required_managers = ['settings_manager', 'secrets_manager']
+        missing_managers = [m for m in required_managers if not hasattr(config, m)]
+
+        if missing_managers:
+            print(f"[FAIL] Отсутствуют менеджеры в config.py: {missing_managers}")
+            return False
+
+        proxy_settings = config.secrets_manager.load_proxy_settings()
+        required_proxy_keys = ['proxy_type', 'proxy_ip', 'proxy_port', 'proxy_user', 'proxy_pass']
+        missing_proxy_keys = [k for k in required_proxy_keys if k not in proxy_settings]
+
+        if missing_proxy_keys:
+            print(f"[FAIL] Отсутствуют ключи прокси: {missing_proxy_keys}")
+            return False
+
+        print("[OK] BotSettings, settings_manager и secrets_manager настроены корректно")
         return True
     except Exception as e:
         print(f"[FAIL] Ошибка проверки переменных config.py: {e}")

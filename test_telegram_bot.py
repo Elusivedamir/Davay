@@ -10,8 +10,8 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch, Mock
-from fixed_telegram_bot import TelegramBot
-from fixed_config import BotSettings, SettingsManager, SecureSecretsManager
+from telegram_bot import TelegramBot
+from config import BotSettings, SettingsManager, SecureSecretsManager
 
 
 class TestTelegramBotBasics:
